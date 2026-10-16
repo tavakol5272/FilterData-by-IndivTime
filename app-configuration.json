@@ -1,4 +1,6 @@
 {
-    "sdk": "MoveApps R SDK",
-    "year": 2014
+    "selName": "nesting",
+    "trackVar": "track",
+    "startVar": "first_date",
+    "endVar": "last_date"
 }
