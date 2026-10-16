@@ -2,76 +2,79 @@
   "version": "1.2",
   "settings": [
     {
-      "id": "sdk",
-      "name": "The name of the MoveApps SDK",
-      "description": "Showcase requesting a string input from the users of your app.",
-      "defaultValue": "MoveApps SDK",
+      "id": "selName",
+      "name": "Selection track name",
+      "description": "Name of the track in your data that holds the table of start and end times per animal (e.g. 'nesting' when nest_table.csv of the Nest Cluster Detection App was added with the Upload File from Cloud Storage App). This track is removed from the output. If it is not set or does not exist, the App returns NULL.",
+      "defaultValue": null,
       "type": "STRING"
     },
     {
-      "id": "year",
-      "name": "The year",
-      "description": "Insert description for the year setting setting",
-      "defaultValue": 2022,
-      "type": "INTEGER"
+      "id": "trackVar",
+      "name": "Track name variable",
+      "description": "Name of the column in the selection track that holds the animal (track) names, e.g. 'track' for nest_table.csv. Names are matched exactly first; if there is no exact match, the cleaned name used by the Nest Cluster Detection App is tried. This setting is required.",
+      "defaultValue": null,
+      "type": "STRING"
     },
     {
-      "id": "auxiliary-file-a",
-      "name": "Personalization",
-      "description": "You can personalize the app by providing a file",
-      "type": "USER_FILE"
+      "id": "startVar",
+      "name": "Start time variable",
+      "description": "Name of the column in the selection track with the start times (e.g. 'first_date' or 'attempt_start'). Format YYYY-MM-DD or YYYY-MM-DD HH:MM:SS, in UTC. If not set or not found, each track is filtered from its first timestamp.",
+      "defaultValue": null,
+      "type": "STRING"
+    },
+    {
+      "id": "endVar",
+      "name": "End time variable",
+      "description": "Name of the column in the selection track with the end times (e.g. 'last_date' or 'attempt_end'). Format YYYY-MM-DD or YYYY-MM-DD HH:MM:SS, in UTC. A date without time includes the full end day. If not set or not found, each track is filtered until its last timestamp.",
+      "defaultValue": null,
+      "type": "STRING"
     }
   ],
   "dependencies": {
     "R": [
       {
+        "name": "move2"
+      },
+      {
         "name": "lubridate"
       },
       {
-        "remotes": "install_git('https://gitlab.com/bartk/move2.git')"
+        "name": "sf"
       }
     ]
   },
-  "providedAppFiles": [
-    {
-      "settingId": "auxiliary-file-a",
-      "from": "data/auxiliary/user-files/provided-app-files/auxiliary-file-a/sample.txt"
-    }
-  ],
   "license": {
     "key": "MIT"
   },
   "language": "eng",
   "keywords": [
-    "example",
-    "template"
+    "filter",
+    "time range",
+    "individual",
+    "nest",
+    "breeding",
+    "move2"
   ],
   "people": [
     {
-      "firstName": "Charles",
+      "firstName": "Andrea",
       "middleInitials": null,
-      "lastName": "Darwin",
-      "email": "creator@example.com",
-      "roles": [
-        "author",
-        "creator"
-      ],
-      "orcid": null,
-      "affiliation": null,
-      "affiliationRor": null
-    }
-  ],
-  "funding": [
+      "lastName": "Kölzsch",
+      "email": "akoelzsch@ab.mpg.de",
+      "roles": ["author", "creator"],
+      "orcid": "0000-0003-0193-1563",
+      "affiliation": "Max-Planck-Institute of Animal Behavior",
+      "affiliationRor": "https://ror.org/026stee22"
+    },
     {
-      "name": "funder name",
-      "comment": "grant for App"
-    }
-  ],
-  "references": [
-    {
-      "type": "IsDescribedBy",
-      "note": "Darwin, C. 1900. The creation. Journal XY. 1-2",
-      "url": "https://anylink.xyz"
+      "firstName": "Nafiseh",
+      "middleInitials": null,
+      "lastName": "Tavakol",
+      "email": "ntavakol@ab.mpg.de",
+      "roles": ["contributor"],
+      "orcid": "0000-0003-3674-4784",
+      "affiliation": "Max-Planck-Institute of Animal Behavior",
+      "affiliationRor": "https://ror.org/026stee22"
     }
   ]
 }
