@@ -1,0 +1,25 @@
+# You can control your local app development via environment variables.
+# You can define things like input-data, app-configuration etc.
+# Per default your environment is defined in `/.env`
+dotenv::load_dot_env()
+
+# This loads and installs the MoveApps R SDK
+remotes::install_github("movestore/moveapps-sdk-r-package")
+moveapps::logger.init()
+moveapps::clearRecentOutput()
+
+library("moveapps")
+Sys.setenv(tz="UTC")
+# `./RFunction.R` is the home of your app code
+# It is the only file which will be bundled into the final app on MoveApps
+source("RFunction.R")
+
+# Lets simulate running your app on MoveApps
+moveapps::runMoveAppsApp()
+
+# To run your app with other settings than in `app-configuration.json`, e.g. with personal
+# credentials from `personal.env` (ignored by git), replace the line above by:
+# dotenv::load_dot_env(file = "personal.env")
+# args <- moveapps::configuration()
+# args[["password"]] <- Sys.getenv("MOVEBANK_PASSWORD")
+# moveapps::runMoveAppsApp(args)
