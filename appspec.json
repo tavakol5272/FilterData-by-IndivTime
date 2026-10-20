@@ -1,33 +1,89 @@
 {
   "version": "1.2",
-  "settings": [
+    "settings": [
     {
-      "id": "selName",
-      "name": "Selection track name",
-      "description": "Name of the track in your data that holds the table of start and end times per animal (e.g. 'nesting' when nest_table.csv of the Nest Cluster Detection App was added with the Upload File from Cloud Storage App). This track is removed from the output. If it is not set or does not exist, the App returns NULL.",
+      "id": "mode",
+      "name": "Time selection mode",
+      "description": "Choose the time selection mode, then choose the other setting options accordingly.",
+      "defaultValue": "first",
+      "type": "RADIOBUTTONS",
+      "options": [
+        { "value": "first", "displayText": "First specified duration of each track" },
+        { "value": "last", "displayText": "Last specified duration of each track" },
+        { "value": "from_time", "displayText": "From a specified timestamp to the end of each track" },
+        { "value": "until_time", "displayText": "From the start of each track to a specified timestamp" },
+        { "value": "between", "displayText": "Between two specified timestamps" },
+        { "value": "custom", "displayText": "Custom time range for each track" }
+      ]
+    },
+    {
+      "id": "duration",
+      "name": "Duration",
+      "description": "Only used for 'First specified duration of each track' and 'Last specified duration of each track'. Enter the length of time to select from the first location, or backwards from the last location, of each track. The value must be greater than 0. For months and years, use a whole number.",    
       "defaultValue": null,
+      "type": "DOUBLE"
+    },
+    {
+      "id": "duration_unit",
+      "name": "Duration unit",
+      "description": "Only used for 'First specified duration of each track' and 'Last specified duration of each track'. Select the unit for the duration. Months and years are treated as calendar periods (e.g. 15 Jan + 3 months = 15 Apr).",     
+      "defaultValue": "days",
+      "type": "DROPDOWN",
+      "options": [
+        { "value": "hours", "displayText": "Hours" },
+        { "value": "days", "displayText": "Days" },
+        { "value": "weeks", "displayText": "Weeks" },
+        { "value": "months", "displayText": "Months" },
+        { "value": "years", "displayText": "Years" }
+      ]
+    },
+    {
+      "id": "start_time",
+      "name": "Start timestamp",
+      "description": "Only used for 'From a specified timestamp to the end of each track' and 'Between two specified timestamps'. Enter the start timestamp in UTC. All locations at or after this time are kept.",     
+      "defaultValue": null,
+      "type": "INSTANT"
+    },
+    {
+      "id": "end_time",
+      "name": "End timestamp",
+      "description": "Only used for 'From the start of each track to a specified timestamp' and 'Between two specified timestamps'. Enter the end timestamp in UTC. All locations at or before this time are kept.",     
+      "defaultValue": null,
+      "type": "INSTANT"
+    },
+    {
+      "id": "custom_table",
+      "name": "Custom time table",
+      "description": "Only used for 'Custom time range for each track'. Upload a .csv file with one row per track and three columns: track ID, start timestamp, and end timestamp. Timestamps must be in UTC and use the format YYYY-MM-DD HH:MM:SS or YYYY-MM-DD. If the start is empty, the first location of the track is used. If the end is empty, the last location is used. A date-only end includes the entire day. Tracks not listed in the table are removed, and each track ID may appear only once.",    
+      "type": "USER_FILE"
+    },
+    {
+      "id": "track_col",
+      "name": "Track ID column name",
+      "description": "Name of the column with the track IDs in the custom table. The IDs must match the track IDs of the data. Also used as column name in the created time table.",
+      "defaultValue": "track_id",
       "type": "STRING"
     },
     {
-      "id": "trackVar",
-      "name": "Track name variable",
-      "description": "Name of the column in the selection track that holds the animal (track) names, e.g. 'track' for nest_table.csv. Names are matched exactly first; if there is no exact match, the cleaned name used by the Nest Cluster Detection App is tried. This setting is required.",
-      "defaultValue": null,
+      "id": "start_col",
+      "name": "Start timestamp column name",
+      "description": "Name of the column with the start timestamps in the custom table. Also used as column name in the created time table.",
+      "defaultValue": "start_timestamp",
       "type": "STRING"
     },
     {
-      "id": "startVar",
-      "name": "Start time variable",
-      "description": "Name of the column in the selection track with the start times (e.g. 'first_date' or 'attempt_start'). Format YYYY-MM-DD or YYYY-MM-DD HH:MM:SS, in UTC. If not set or not found, each track is filtered from its first timestamp.",
-      "defaultValue": null,
+      "id": "end_col",
+      "name": "End timestamp column name",
+      "description": "Name of the column containing the end timestamps in the custom table. This name is also used for the end timestamp column in the generated editable time table.",      
+      "defaultValue": "end_timestamp",
       "type": "STRING"
     },
     {
-      "id": "endVar",
-      "name": "End time variable",
-      "description": "Name of the column in the selection track with the end times (e.g. 'last_date' or 'attempt_end'). Format YYYY-MM-DD or YYYY-MM-DD HH:MM:SS, in UTC. A date without time includes the full end day. If not set or not found, each track is filtered until its last timestamp.",
-      "defaultValue": null,
-      "type": "STRING"
+      "id": "create_table",
+      "name": "Create editable time table",
+      "description": "If selected, an editable table named 'track_time_table.csv' is created as an artefact. It contains the first and last timestamp of each track from the input data and can be edited and uploaded using the 'Custom time range for each track' mode.",
+      "defaultValue": false,
+      "type": "CHECKBOX"
     }
   ],
   "dependencies": {
@@ -37,9 +93,6 @@
       },
       {
         "name": "lubridate"
-      },
-      {
-        "name": "sf"
       }
     ]
   },
@@ -49,10 +102,14 @@
   "language": "eng",
   "keywords": [
     "filter",
-    "time range",
-    "individual",
-    "nest",
-    "breeding",
+    "time",
+    "time window",
+    "track",
+    "per track",
+    "start",
+    "end",
+    "subset",
+    "movement",
     "move2"
   ],
   "people": [
@@ -61,7 +118,10 @@
       "middleInitials": null,
       "lastName": "Kölzsch",
       "email": "akoelzsch@ab.mpg.de",
-      "roles": ["author", "creator"],
+      "roles": [
+        "author",
+        "creator"
+      ],
       "orcid": "0000-0003-0193-1563",
       "affiliation": "Max-Planck-Institute of Animal Behavior",
       "affiliationRor": "https://ror.org/026stee22"
@@ -71,7 +131,9 @@
       "middleInitials": null,
       "lastName": "Tavakol",
       "email": "ntavakol@ab.mpg.de",
-      "roles": ["contributor"],
+      "roles": [
+        "contributor"
+      ],
       "orcid": "0000-0003-3674-4784",
       "affiliation": "Max-Planck-Institute of Animal Behavior",
       "affiliationRor": "https://ror.org/026stee22"
