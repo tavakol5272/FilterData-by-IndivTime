@@ -171,7 +171,7 @@ rFunction <- function(data, mode = "first", duration = NULL, duration_unit = "da
     stop(paste("Unknown mode:", mode))
   }
   names(time1) <- names(timeN) <- names(end_excl) <- track_ids
-  logger.info("Both the start and the end timestamp are included in the selection: start <= timestamp <= end.")
+  logger.info("Time selections include the specified start and end. For date-only end values, the entire end date is included.")
 
   # keep locations within [time1, timeN] of their track (both ends included),
   # or [time1, timeN) for date-only ends, where timeN is midnight of the following day
