@@ -1,6 +1,11 @@
 {
-    "selName": "nesting",
-    "trackVar": "track",
-    "startVar": "first_date",
-    "endVar": "last_date"
+  "mode": "first",
+  "duration": 3,
+  "duration_unit": "days",
+  "start_time": null,
+  "end_time": null,
+  "track_col": "track_id",
+  "start_col": "start_timestamp",
+  "end_col": "end_timestamp",
+  "create_table": true
 }
