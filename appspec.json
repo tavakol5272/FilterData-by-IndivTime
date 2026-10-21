@@ -54,7 +54,7 @@
     {
       "id": "custom_table",
       "name": "Custom time table",
-      "description": "Only used for 'Custom time range for each track'. Upload a .csv file with one row per track and three columns: track ID, start timestamp, and end timestamp. Timestamps must be in UTC and use the format YYYY-MM-DD HH:MM:SS or YYYY-MM-DD. If the start is empty, the first location of the track is used. If the end is empty, the last location is used. A date-only end includes the entire day. Tracks not listed in the table are removed, and each track ID may appear only once.",    
+      "description": "Only used for 'Custom time range for each track'. Upload a .csv file with one row per track and three columns: track ID, start timestamp, and end timestamp. Timestamps must be in UTC. The recommended format is YYYY-MM-DDTHH:MM:SSZ (e.g. 2014-08-03T02:01:23Z), as in the table created by the App; YYYY-MM-DD HH:MM:SS, YYYY-MM-DD and Excel formats such as 8/3/2014 2:01 (month/day/year) are also accepted. If the start is empty, the first location of the track is used. If the end is empty, the last location is used. A date-only end includes the entire day. Tracks not listed in the table are removed, and each track ID may appear only once.",    
       "type": "USER_FILE"
     },
     {
@@ -81,7 +81,7 @@
     {
       "id": "create_table",
       "name": "Create editable time table",
-      "description": "If selected, an editable table named 'track_time_table.csv' is created as an artefact. It contains the first and last timestamp of each track from the input data and can be edited and uploaded using the 'Custom time range for each track' mode.",
+      "description": "If selected, an editable table named 'track_time_table.csv' is created as an artefact. It contains the first and last timestamp of each track from the input data and can be edited and uploaded using the 'Custom time range for each track' mode. The timestamps are written in the format YYYY-MM-DDTHH:MM:SSZ (UTC).",
       "defaultValue": false,
       "type": "CHECKBOX"
     }

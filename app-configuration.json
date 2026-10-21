@@ -1,7 +1,7 @@
 {
-  "mode": "first",
-  "duration": 3,
-  "duration_unit": "days",
+  "mode": "last",
+  "duration": 2,
+  "duration_unit": "months",
   "start_time": null,
   "end_time": null,
   "track_col": "track_id",
