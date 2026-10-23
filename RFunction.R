@@ -3,6 +3,7 @@ library("lubridate")
 
 ## The parameter "data" is reserved for the data object passed on from the previous app
 
+### Helper 1 : moving a time forward or backward. 
 # Shift timestamps by a duration. Hours/days/weeks are exact lengths; months/years
 # are calendar periods (e.g. 15 Jan + 3 months = 15 Apr; 31 Jan + 1 month = 28/29 Feb).
 shift_time <- function(t, duration, duration_unit, direction = 1) {
@@ -14,6 +15,8 @@ shift_time <- function(t, duration, duration_unit, direction = 1) {
   }
 }
 
+
+### Helper 2:  reading one timestamp from the table
 # Accepted timestamp formats of the uploaded table (all in UTC; time and seconds are optional):
 #  - year first:                2014-08-03T02:01:23Z (recommended, ISO 8601 as used by MoveApps), 2014-08-03 02:01:23,
 #                                also with "/" or "." between the date parts
@@ -52,6 +55,8 @@ parse_one_time <- function(v) {
   list(time = t, unit = unit, type = if (p$type == "mdy" && mo != d && mo <= 12 && d <= 12) "mdy_ambiguous" else p$type)
 }
 
+
+##### Helper 3: Reading a whole column
 # Parse a timestamp column of the uploaded table; empty cells become NA, unreadable or unsafe values stop the App
 parse_table_time <- function(x, col) {
   x <- trimws(as.character(x))
@@ -84,6 +89,7 @@ parse_table_time <- function(x, col) {
   list(time = out, unit = unit)
 }
 
+### Helper 4: Reading the uploaded CSV
 # Read the user-uploaded table with one row per track: track ID, start timestamp, end timestamp
 read_custom_table <- function(file, track_col, start_col, end_col) {
   tab <- read.csv(file, colClasses = "character", check.names = FALSE)
@@ -103,21 +109,25 @@ read_custom_table <- function(file, track_col, start_col, end_col) {
              start_unit = start$unit, end_unit = end$unit)
 }
 
+
+### Main Function
 rFunction <- function(data, mode = "first", duration = NULL, duration_unit = "days",
                       start_time = NULL, end_time = NULL,
                       track_col = "track_id", start_col = "start_timestamp", end_col = "end_timestamp",
                       create_table = FALSE, ...) {
-  
+
+  ## Default column names
   # empty column-name settings fall back to the default names
   if (is.null(track_col) || trimws(track_col) == "") track_col <- "track_id"
   if (is.null(start_col) || trimws(start_col) == "") start_col <- "start_timestamp"
   if (is.null(end_col) || trimws(end_col) == "") end_col <- "end_timestamp"
-  
+
+  ## Read track IDs and times
   ids <- as.character(mt_track_id(data))
   times <- mt_time(data)
   track_ids <- unique(ids)
   
-  # first and last valid timestamp of each track
+  # Missing timestamps, and the first and last valid timestamp of each track
   valid <- !is.na(times)
   if (any(!valid)) logger.warn(paste(sum(!valid), "locations have no timestamp and are removed from the result."))
   no_time <- setdiff(track_ids, ids[valid])
@@ -130,7 +140,7 @@ rFunction <- function(data, mode = "first", duration = NULL, duration_unit = "da
   minT <- as.POSIXct(tapply(as.numeric(times[valid]), ids[valid], min)[track_ids], origin = "1970-01-01", tz = "UTC")
   maxT <- as.POSIXct(tapply(as.numeric(times[valid]), ids[valid], max)[track_ids], origin = "1970-01-01", tz = "UTC")
   
-  # optional editable template table with first/last timestamp per track (from the input data)
+  # Create the editable table (optional) with first/last timestamp per track (from the input data)
   if (isTRUE(create_table)) {
     template <- data.frame(track_ids,
                            format(minT, "%Y-%m-%dT%H:%M:%SZ", tz = "UTC"),
@@ -163,7 +173,7 @@ rFunction <- function(data, mode = "first", duration = NULL, duration_unit = "da
     if (is.na(end_time)) stop("Your end timestamp could not be read. Please check the setting.")
   }
   
-  # start (time1) and end (timeN) per track; end_excl marks ends that are excluded
+  # Decide start (time1) and end (timeN) per track; end_excl marks ends that are excluded
   # (only used for date-only end values in the custom table, see below)
   time1 <- minT
   timeN <- maxT
@@ -188,16 +198,17 @@ rFunction <- function(data, mode = "first", duration = NULL, duration_unit = "da
     time1[] <- start_time
     timeN[] <- end_time
     logger.info(paste("Selecting all locations between", start_time, "and", end_time, "."))
-  } else if (mode == "custom") {
+  } else if (mode == "custom") {  
     file <- getAuxiliaryFilePath("custom_table")
     if (is.null(file)) stop(paste("For the mode 'Custom table' please upload a table (csv) with the columns", track_col, ",", start_col, ",", end_col, "."))
     tab <- read_custom_table(file, track_col, start_col, end_col)
     
-    unknown <- setdiff(tab$track_id, c(track_ids, no_time))
+    unknown <- setdiff(tab$track_id, c(track_ids, no_time))  # in the table, but not in the data
     if (length(unknown) > 0) logger.warn(paste("These track IDs of your table are not in the data and are ignored:", paste(unknown, collapse = ", ")))
-    missing <- setdiff(track_ids, tab$track_id)
+    missing <- setdiff(track_ids, tab$track_id) # in the data, but not in the table
     if (length(missing) > 0) logger.warn(paste("These tracks are not in your table and are removed from the result:", paste(missing, collapse = ", ")))
-    
+
+    # Both give a warning. Tracks that are not in the table are removed.
     m <- match(track_ids, tab$track_id)
     time1 <- tab$start[m]
     timeN <- tab$end[m]
@@ -236,6 +247,8 @@ rFunction <- function(data, mode = "first", duration = NULL, duration_unit = "da
   } else {
     stop(paste("Unknown mode:", mode))
   }
+
+  ## Decide which locations to keep
   names(time1) <- names(timeN) <- names(end_excl) <- track_ids
   logger.info("Time selections include the specified start and end. For date-only end values, the entire end date is included.")
   
@@ -246,7 +259,8 @@ rFunction <- function(data, mode = "first", duration = NULL, duration_unit = "da
   k_times <- times[keep]
   keep[keep] <- !is.na(time1[k_ids]) & k_times >= time1[k_ids] &
     ifelse(end_excl[k_ids], k_times < timeN[k_ids], k_times <= timeN[k_ids])
-  
+
+  # Log message for each track
   for (id in track_ids) {
     n_in <- sum(keep[ids == id])
     n_all <- sum(ids == id)
@@ -261,7 +275,8 @@ rFunction <- function(data, mode = "first", duration = NULL, duration_unit = "da
     if (n_in == 0) logger.info(paste0("Track ", id, ": selected time range ", range_txt, ". No locations in this time range, the track is removed.")) else
       logger.info(paste0("Track ", id, ": selected time range ", range_txt, ". ", n_in, " of ", n_all, " locations selected."))
   }
-  
+
+  ## Result                     
   if (!any(keep)) {
     logger.warn("None of your data lie in the selected time range(s). The App returns NULL.")
     result <- NULL
